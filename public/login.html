@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Cycle Rental</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Specific overrides for Login to ensure perfect centering */
+        body {
+            background-image: radial-gradient(#E0F7FA 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .login-card {
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .login-header {
+            margin-bottom: 30px;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-link">&larr; Back</a>
+
+    <div class="container">
+        <div class="card login-card">
+            <div class="login-header">
+                <span class="icon">👤</span>
+                <h2>Welcome</h2>
+                <p style="color: var(--text-secondary);">Enter your credentials to continue</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="e.g. rider123" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="email">Mail ID</label>
+                    <div style="position: relative;">
+                        <input type="text" id="email" placeholder="example@mail.com" required
+                            style="padding-right: 35px;">
+                        <span id="email-check"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--success); display: none; font-size: 1.2rem;">✔</span>
+                    </div>
+                    <small id="email-error" style="color: var(--danger); display: none; margin-top: 5px;">Error: Please
+                        check the mail id properly</small>
+                    <small id="email-success" style="color: var(--success); display: none; margin-top: 5px;"></small>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn" style="margin-top: 10px;">Login to Ride</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        const emailInput = document.getElementById('email');
+        const emailError = document.getElementById('email-error');
+        const emailSuccess = document.getElementById('email-success');
+        const emailCheck = document.getElementById('email-check');
+
+        emailInput.addEventListener('input', () => {
+            const val = emailInput.value;
+            // validation: verified if contains '@' and '.com'
+            if (val.includes('@') && val.includes('.com')) {
+                emailError.style.display = 'none';
+                emailSuccess.style.display = 'block';
+                emailCheck.style.display = 'block';
+                emailInput.style.borderColor = 'var(--success)';
+            } else {
+                emailSuccess.style.display = 'none';
+                emailCheck.style.display = 'none';
+                if (val.length > 0) {
+                    emailError.style.display = 'block';
+                    emailInput.style.borderColor = 'var(--danger)';
+                } else {
+                    emailError.style.display = 'none';
+                    emailInput.style.borderColor = 'transparent';
+                }
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const email = emailInput.value;
+
+            // Final check before submit
+            if (!email.includes('@') || !email.includes('.com')) {
+                emailError.style.display = 'block';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username }) // Keeping simple backend for now
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('user', username);
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+
+</html>
