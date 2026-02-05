@@ -39,9 +39,20 @@ const checkExpiration = () => {
 
 // Login Simulation
 app.post('/api/login', (req, res) => {
-    const { username } = req.body;
-    // Accept any login
-    res.json({ success: true, message: "Logged in", user: username });
+    try {
+        const body = req.body || {};
+        const { username } = body;
+
+        if (!username) {
+            return res.status(400).json({ success: false, message: "Username required" });
+        }
+
+        // Accept any login
+        res.json({ success: true, message: "Logged in", user: username });
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).json({ success: false, message: "Server error during login" });
+    }
 });
 
 // Get System Status (for Dashboard)

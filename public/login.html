@@ -86,11 +86,12 @@
         const emailError = document.getElementById('email-error');
         const emailSuccess = document.getElementById('email-success');
         const emailCheck = document.getElementById('email-check');
+        const loginBtn = document.querySelector('button[type="submit"]');
 
         emailInput.addEventListener('input', () => {
             const val = emailInput.value;
-            // validation: verified if contains '@' and '.com'
-            if (val.includes('@') && val.includes('.com')) {
+            // validation: simplified check
+            if (val.includes('@')) {
                 emailError.style.display = 'none';
                 emailSuccess.style.display = 'block';
                 emailCheck.style.display = 'block';
@@ -113,25 +114,44 @@
             const username = document.getElementById('username').value;
             const email = emailInput.value;
 
-            // Final check before submit
-            if (!email.includes('@') || !email.includes('.com')) {
+            // Final check
+            if (!email.includes('@')) {
+                emailError.textContent = "Please enter a valid email address.";
                 emailError.style.display = 'block';
                 return;
             }
+
+            // UI Feedback
+            loginBtn.textContent = "Logging in...";
+            loginBtn.disabled = true;
+            loginBtn.style.opacity = "0.7";
 
             try {
                 const res = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username }) // Keeping simple backend for now
+                    body: JSON.stringify({ username })
                 });
+
+                if (!res.ok) {
+                    throw new Error(`Server responded with ${res.status}`);
+                }
+
                 const data = await res.json();
                 if (data.success) {
                     localStorage.setItem('user', username);
                     window.location.href = 'dashboard.html';
+                } else {
+                    throw new Error(data.message || "Login failed");
                 }
             } catch (err) {
                 console.error(err);
+                alert("Login failed: " + err.message + ". Please try again.");
+
+                // Reset UI
+                loginBtn.textContent = "Login to Ride";
+                loginBtn.disabled = false;
+                loginBtn.style.opacity = "1";
             }
         });
     </script>
