@@ -40,6 +40,19 @@ const checkExpiration = () => {
     }
 };
 
+// Helper to check if scheduled ride should start
+const checkActivation = () => {
+    if (lockState.isLocked && lockState.startTime) {
+        const now = new Date();
+        const start = new Date(lockState.startTime);
+        // If now is past start time (and assume not yet past end time, though expiration handles that)
+        if (now >= start) {
+            console.log("Scheduled ride starting. Unlocking...");
+            lockState.isLocked = false;
+        }
+    }
+};
+
 // --- API Routes ---
 
 // Login Simulation
@@ -62,6 +75,7 @@ app.post('/api/login', (req, res) => {
 
 // Get System Status (for Dashboard)
 app.get('/api/status', (req, res) => {
+    checkActivation();
     checkExpiration();
     const remainingMs = lockState.endTime ? new Date(lockState.endTime) - new Date() : 0;
 
@@ -132,7 +146,8 @@ app.post('/api/payment', (req, res) => {
     }
 
     // Simulate Payment delay (logic handled in frontend mostly, this just commits the transaction)
-    const now = new Date(); // In a real app, this would use the bookingDate + time
+    // const now = new Date(); // Removed to avoid conflict and unused var 
+
     // For this prototype, we assume immediate start for simplicity, or we could schedule it.
     // However, the prompt implies "booking" which usually means future, but the current system
     // locks/unlocks based on "now". Let's stick to "immediate unlock" logic for now but validate the date input as requested.
@@ -193,22 +208,11 @@ app.post('/api/payment', (req, res) => {
     const endTime = new Date(startTimestamp.getTime() + totalMinutes * 60000);
     const amount = Math.ceil(totalMinutes / 30) * 100; // 100 Rs per 30 mins
 
-    lockState = {
-        isLocked: false, // UNLOCK immediately? Or wait? 
-        // If it's in the future, we still say "isLocked: false" on the server?
-        // If we do that, the dashboard will show "UNLOCKED 🔓" and timer.
-        // If the date is future, the timer will show... negative? Or huge duration?
-        // `remainingMs = endTime - now`. 
-        // If `endTime` is tomorrow, `remainingMs` is huge. 
-        // So the lock is "reserved". 
-        // Use cases usually imply "I want to ride NOW". 
-        // "Select Duration" -> "Pay & Unlock".
-        // Why ask for date? Maybe for extending? 
-        // "book the cycle between any day from the current date".
-        // Okay, I will implement the logic:
-        // Set `startTime` and `endTime` based on the input.
-        // The dashboard logic `remainingMs` will handle the countdown. (It might be large).
+    const now = new Date();
+    const isFuture = startTimestamp > now;
 
+    lockState = {
+        isLocked: isFuture, // Lock if future, Unlock if now
         startTime: startTimestamp.toISOString(),
         endTime: endTime.toISOString(),
         durationMinutes: totalMinutes
@@ -225,11 +229,12 @@ app.post('/api/payment', (req, res) => {
 
     res.json({
         success: true,
-        message: "Payment Successful. Unlocking...",
-        unlock: true,
+        message: isFuture ? "Booking Scheduled." : "Payment Successful. Unlocking...",
+        unlock: !isFuture,
         startTime: lockState.startTime,
         endTime: lockState.endTime,
-        durationMinutes: totalMinutes
+        durationMinutes: totalMinutes,
+        isFuture: isFuture
     });
 });
 

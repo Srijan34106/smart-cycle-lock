@@ -43,9 +43,37 @@ async function initDashboard() {
             const data = await res.json();
 
             // Update Lock Status
-            if (data.isLocked) {
+            const now = new Date();
+            const startTime = data.startTime ? new Date(data.startTime) : null;
+            const isScheduled = data.isLocked && startTime && startTime > now;
+
+            if (isScheduled) {
+                lockStatusEl.className = 'status-badge status-locked'; // Keep red or maybe yellow?
+                lockStatusEl.innerHTML = 'SCHEDULED ⏳';
+                lockStatusEl.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+                lockStatusEl.style.color = '#FFC107'; // Amber
+
+                rideInfoEl.classList.add('hidden');
+
+                // Show booking details
+                const startStr = startTime.toLocaleString();
+                bookBtn.style.display = 'block';
+                bookBtn.disabled = true;
+                bookBtn.style.opacity = '0.7';
+                bookBtn.innerText = `Booked for ${startStr}`;
+
+                endRideBtn.style.display = 'none';
+
+                // Reset timer
+                timerEl.innerText = "00:00:00";
+                if (progressBarFill) progressBarFill.style.width = '0%';
+
+            } else if (data.isLocked) {
                 lockStatusEl.className = 'status-badge status-locked';
                 lockStatusEl.innerHTML = 'LOCKED 🔒';
+                lockStatusEl.style.backgroundColor = ''; // Reset
+                lockStatusEl.style.color = '';
+
                 rideInfoEl.classList.add('hidden');
 
                 // Explicitly Reset Timer UI
@@ -62,15 +90,16 @@ async function initDashboard() {
             } else {
                 lockStatusEl.className = 'status-badge status-unlocked';
                 lockStatusEl.innerHTML = 'UNLOCKED 🔓';
+                lockStatusEl.style.backgroundColor = '';
+                lockStatusEl.style.color = '';
+
                 rideInfoEl.classList.remove('hidden');
 
                 bookBtn.style.display = 'none';
                 endRideBtn.style.display = 'block';
 
                 // Calculate remaining time
-                const now = new Date();
                 const endTime = new Date(data.endTime);
-                const startTime = new Date(data.startTime);
 
                 let remainingMs = endTime - now;
                 if (remainingMs < 0) remainingMs = 0;
