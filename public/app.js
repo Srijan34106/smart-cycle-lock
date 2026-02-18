@@ -21,8 +21,19 @@ async function initDashboard() {
     // Modal elements
     const modal = document.getElementById('booking-modal');
     const closeModal = document.querySelector('.close-modal');
+
+    // Step Elements
+    const step1 = document.getElementById('booking-step-1');
+    const step2 = document.getElementById('booking-step-2');
+    const nextBtn = document.getElementById('next-btn');
+    const backBtn = document.getElementById('back-btn');
+
+    // Inputs
+    const bookingDateInput = document.getElementById('booking-date');
+    const hoursInput = document.getElementById('hours-input');
+    const minutesInput = document.getElementById('minutes-input');
+
     const payBtn = document.getElementById('pay-btn');
-    const durationInput = document.getElementById('duration-input');
     const costDisplay = document.getElementById('cost-display');
 
     // --- State Polling ---
@@ -136,31 +147,86 @@ async function initDashboard() {
     // --- Booking Flow ---
     bookBtn.addEventListener('click', () => {
         modal.classList.add('active');
-        calculateCost();
+
+        // Reset to Step 1
+        step1.classList.remove('hidden');
+        step2.classList.add('hidden');
+
+        // Set Min/Max Date
+        const today = new Date();
+        const maxDate = new Date();
+        maxDate.setDate(today.getDate() + 5);
+
+        bookingDateInput.min = today.toISOString().split('T')[0];
+        bookingDateInput.max = maxDate.toISOString().split('T')[0];
+        bookingDateInput.value = today.toISOString().split('T')[0];
     });
 
     closeModal.addEventListener('click', () => {
         modal.classList.remove('active');
     });
 
+    // Navigation Logic
+    nextBtn.addEventListener('click', () => {
+        const selectedDate = bookingDateInput.value;
+        if (!selectedDate) {
+            alert("Please select a date.");
+            return;
+        }
+
+        // Validation check (double check frontend)
+        const dateObj = new Date(selectedDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        dateObj.setHours(0, 0, 0, 0);
+
+        const diffTime = dateObj - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0 || diffDays > 5) {
+            alert("Please select a date within the next 5 days.");
+            return;
+        }
+
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        calculateCost();
+    });
+
+    backBtn.addEventListener('click', () => {
+        step2.classList.add('hidden');
+        step1.classList.remove('hidden');
+    });
+
     // Cost Calculation
-    durationInput.addEventListener('input', calculateCost);
+    hoursInput.addEventListener('input', calculateCost);
+    minutesInput.addEventListener('input', calculateCost);
 
     function calculateCost() {
-        let mins = parseInt(durationInput.value);
-        if (isNaN(mins) || mins < 1) mins = 0;
+        let h = parseInt(hoursInput.value) || 0;
+        let m = parseInt(minutesInput.value) || 0;
+
+        if (h < 0) h = 0;
+        if (m < 0) m = 0;
+
+        const totalMins = (h * 60) + m;
 
         // Pricing Logic: ₹10 per 30 mins or part thereof
-        let amount = Math.ceil(mins / 30) * 10;
-        if (amount === 0 && mins > 0) amount = 10;
+        let amount = Math.ceil(totalMins / 30) * 10;
+        if (amount === 0 && totalMins > 0) amount = 10;
+        if (totalMins === 0) amount = 0; // Display 0 if invalid
 
         costDisplay.innerText = `₹${amount}`;
     }
 
-    // Payment Simulation
+    // Payment Logic
     payBtn.addEventListener('click', async () => {
-        const mins = parseInt(durationInput.value);
-        if (!mins || mins <= 0) {
+        const dateVal = bookingDateInput.value;
+        const h = parseInt(hoursInput.value) || 0;
+        const m = parseInt(minutesInput.value) || 0;
+        const totalMins = (h * 60) + m;
+
+        if (totalMins <= 0) {
             alert("Please enter a valid duration");
             return;
         }
@@ -174,7 +240,11 @@ async function initDashboard() {
                 const res = await fetch(`${API_URL}/payment`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ durationMinutes: mins })
+                    body: JSON.stringify({
+                        bookingDate: dateVal,
+                        hours: h,
+                        minutes: m
+                    })
                 });
                 const data = await res.json();
 
@@ -184,12 +254,12 @@ async function initDashboard() {
                     alert("Payment Successful! Cycle Unlocked.");
                     updateStatus();
                 } else {
-                    alert("Payment Failed");
+                    alert("Payment Failed: " + data.message);
                 }
             } catch (err) {
                 alert("Error processing payment");
             } finally {
-                payBtn.innerText = "Pay Now & Unlock";
+                payBtn.innerText = "Pay & Unlock";
                 payBtn.disabled = false;
             }
         }, 1500);

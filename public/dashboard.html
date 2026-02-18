@@ -227,20 +227,46 @@
     <div id="booking-modal" class="modal-overlay">
         <div class="modal">
             <span class="close-modal">&times;</span>
-            <div class="icon">💳</div>
-            <h3>Select Duration</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 30px;">Rate: ₹10 / 30 mins</p>
 
-            <div class="input-group">
-                <label>Minutes</label>
-                <input type="number" id="duration-input" min="1" value="30" step="1">
+            <!-- Step 1: Date Selection -->
+            <div id="booking-step-1" class="booking-step">
+                <div class="icon">📅</div>
+                <h3>Select Date</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Book for today or up to 5 days in advance.
+                </p>
+                <div class="input-group">
+                    <label>Date</label>
+                    <input type="date" id="booking-date" class="date-input">
+                </div>
+                <button id="next-btn" class="btn" style="margin-top: 10px;">Next</button>
             </div>
 
-            <p style="margin: 20px 0; font-size: 1.2rem; font-weight: 700;">
-                Total: <span id="cost-display" style="color: var(--success);">₹10</span>
-            </p>
+            <!-- Step 2: Duration Selection -->
+            <div id="booking-step-2" class="booking-step hidden">
+                <div class="icon">💳</div>
+                <h3>Select Duration</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Rate: ₹10 / 30 mins</p>
 
-            <button id="pay-btn" class="btn">Pay & Unlock</button>
+                <div class="input-group" style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label>Hours</label>
+                        <input type="number" id="hours-input" class="time-input" min="0" value="0" step="1">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Minutes</label>
+                        <input type="number" id="minutes-input" class="time-input" min="0" max="59" value="30" step="1">
+                    </div>
+                </div>
+
+                <p style="margin: 20px 0; font-size: 1.2rem; font-weight: 700;">
+                    Total: <span id="cost-display" style="color: var(--success);">₹10</span>
+                </p>
+
+                <div style="display: flex; gap: 10px;">
+                    <button id="back-btn" class="btn btn-secondary">Back</button>
+                    <button id="pay-btn" class="btn">Pay & Unlock</button>
+                </div>
+            </div>
         </div>
     </div>
 
