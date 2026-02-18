@@ -211,9 +211,9 @@ async function initDashboard() {
 
         const totalMins = (h * 60) + m;
 
-        // Pricing Logic: ₹10 per 30 mins or part thereof
-        let amount = Math.ceil(totalMins / 30) * 10;
-        if (amount === 0 && totalMins > 0) amount = 10;
+        // Pricing Logic: ₹100 per 30 mins or part thereof
+        let amount = Math.ceil(totalMins / 30) * 100;
+        if (amount === 0 && totalMins > 0) amount = 100;
         if (totalMins === 0) amount = 0; // Display 0 if invalid
 
         costDisplay.innerText = `₹${amount}`;

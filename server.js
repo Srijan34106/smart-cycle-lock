@@ -191,7 +191,7 @@ app.post('/api/payment', (req, res) => {
     }
 
     const endTime = new Date(startTimestamp.getTime() + totalMinutes * 60000);
-    const amount = Math.ceil(totalMinutes / 30) * 10; // 10 Rs per 30 mins
+    const amount = Math.ceil(totalMinutes / 30) * 100; // 100 Rs per 30 mins
 
     lockState = {
         isLocked: false, // UNLOCK immediately? Or wait? 
