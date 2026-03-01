@@ -117,6 +117,33 @@ app.post(['/api/end-ride', '/end-ride'], (req, res) => {
     res.json({ success: true, message: "Ride ended successfully" });
 });
 
+// Cancel Scheduled Booking
+app.post(['/api/cancel-booking', '/cancel-booking'], (req, res) => {
+    const now = new Date();
+    const startTime = lockState.startTime ? new Date(lockState.startTime) : null;
+    const isScheduled = lockState.isLocked && startTime && startTime > now;
+
+    if (!isScheduled) {
+        return res.status(400).json({ success: false, message: "No scheduled booking to cancel" });
+    }
+
+    const scheduledStart = lockState.startTime;
+    const scheduledEnd = lockState.endTime;
+
+    lockState = {
+        isLocked: true,
+        startTime: null,
+        endTime: null,
+        durationMinutes: 0
+    };
+
+    rideHistory = rideHistory.filter(
+        (ride) => !(ride.startTime === scheduledStart && ride.endTime === scheduledEnd)
+    );
+
+    res.json({ success: true, message: "Scheduled booking canceled" });
+});
+
 // Process Payment & Start Ride
 app.post(['/api/payment', '/payment'], (req, res) => {
     const { bookingDate, hours, minutes } = req.body;

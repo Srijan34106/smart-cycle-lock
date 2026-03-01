@@ -14,6 +14,7 @@ async function initDashboard() {
     const timerEl = document.getElementById('timer');
     const rideInfoEl = document.getElementById('ride-info');
     const bookBtn = document.getElementById('book-btn');
+    const cancelBookingBtn = document.getElementById('cancel-booking-btn');
     const endRideBtn = document.getElementById('end-ride-btn');
     const historyList = document.getElementById('history-list');
     const progressBarFill = document.getElementById('progress-bar-fill');
@@ -61,6 +62,7 @@ async function initDashboard() {
                 bookBtn.disabled = true;
                 bookBtn.style.opacity = '0.7';
                 bookBtn.innerText = `Booked for ${startStr}`;
+                cancelBookingBtn.style.display = 'block';
 
                 endRideBtn.style.display = 'none';
 
@@ -82,6 +84,7 @@ async function initDashboard() {
 
                 bookBtn.style.display = 'block';
                 endRideBtn.style.display = 'none';
+                cancelBookingBtn.style.display = 'none';
 
                 // Allow booking when locked
                 bookBtn.disabled = false;
@@ -97,6 +100,7 @@ async function initDashboard() {
 
                 bookBtn.style.display = 'none';
                 endRideBtn.style.display = 'block';
+                cancelBookingBtn.style.display = 'none';
 
                 // Calculate remaining time
                 const endTime = new Date(data.endTime);
@@ -170,6 +174,25 @@ async function initDashboard() {
             }
         } catch (err) {
             console.error("Error ending ride", err);
+        }
+    });
+
+    // --- Cancel Scheduled Booking Flow ---
+    cancelBookingBtn.addEventListener('click', async () => {
+        if (!confirm("Are you sure you want to cancel this booking?")) return;
+
+        try {
+            const res = await fetch(`${API_URL}/cancel-booking`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert("Booking canceled.");
+                updateStatus();
+            } else {
+                alert("Error canceling booking: " + data.message);
+            }
+        } catch (err) {
+            console.error("Error canceling booking", err);
+            alert("Error canceling booking");
         }
     });
 
