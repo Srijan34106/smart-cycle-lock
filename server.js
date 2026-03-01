@@ -56,7 +56,7 @@ const checkActivation = () => {
 // --- API Routes ---
 
 // Login Simulation
-app.post('/api/login', (req, res) => {
+app.post(['/api/login', '/login'], (req, res) => {
     try {
         const body = req.body || {};
         const { username } = body;
@@ -74,7 +74,7 @@ app.post('/api/login', (req, res) => {
 });
 
 // Get System Status (for Dashboard)
-app.get('/api/status', (req, res) => {
+app.get(['/api/status', '/status'], (req, res) => {
     checkActivation();
     checkExpiration();
     const remainingMs = lockState.endTime ? new Date(lockState.endTime) - new Date() : 0;
@@ -91,7 +91,7 @@ app.get('/api/status', (req, res) => {
 });
 
 // ESP32 Endpoint Simulation
-app.get('/api/lock-status', (req, res) => {
+app.get(['/api/lock-status', '/lock-status'], (req, res) => {
     checkExpiration();
     // Simplified response for ESP32
     res.json({
@@ -102,7 +102,7 @@ app.get('/api/lock-status', (req, res) => {
 });
 
 // End Ride Manually
-app.post('/api/end-ride', (req, res) => {
+app.post(['/api/end-ride', '/end-ride'], (req, res) => {
     if (lockState.isLocked) {
         return res.status(400).json({ success: false, message: "Ride not active" });
     }
@@ -118,7 +118,7 @@ app.post('/api/end-ride', (req, res) => {
 });
 
 // Process Payment & Start Ride
-app.post('/api/payment', (req, res) => {
+app.post(['/api/payment', '/payment'], (req, res) => {
     const { bookingDate, hours, minutes } = req.body;
 
     if (!bookingDate) {
